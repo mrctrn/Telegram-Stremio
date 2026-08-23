@@ -1955,7 +1955,10 @@ async def get_tools_channels_api() -> dict:
         name = str(ch)
         try:
             if client is not None:
-                chat = await client.get_chat(int(ch) if str(ch).lstrip("-").isdigit() else ch)
+                if str(ch).lstrip("-").isdigit():
+                    chat = await client.get_chat(int(f"-100{str(ch).replace('-100', '')}"))
+                else:
+                    chat = await client.get_chat(ch)
                 name = getattr(chat, "title", None) or getattr(chat, "first_name", None) or str(ch)
         except Exception as e:
             LOGGER.warning(f"[Tools] Could not resolve channel {ch}: {e}")

@@ -353,7 +353,7 @@ class SettingsManager:
                 resolved = None
                 for client in clients:
                     try:
-                        chat = await client.get_chat(int(cid))
+                        chat = await client.get_chat(int(f"-100{str(cid).replace('-100', '')}"))
                         if chat and getattr(chat, "title", None):
                             resolved = chat.title
                             break

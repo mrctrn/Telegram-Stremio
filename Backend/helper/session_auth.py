@@ -107,19 +107,31 @@ async def start_login(phone: str) -> dict:
     if not Telegram.API_ID or not Telegram.API_HASH:
         raise ValueError("API_ID / API_HASH are not configured.")
 
+    LOGGER.info(f"[SESSION] Starting login for phone: {phone}")
+    LOGGER.info(f"[SESSION] Using API_ID: {Telegram.API_ID}, API_HASH: {'*' * 8}")
+    
     client = Client(f"login_{secrets.token_hex(6)}", api_id=Telegram.API_ID, api_hash=Telegram.API_HASH, in_memory=True)
     await client.connect()
+    LOGGER.info(f"[SESSION] Client connected, sending code...")
     try:
         sent = await client.send_code(phone)
-    except (PhoneNumberInvalid, BadRequest):
+        LOGGER.info(f"[SESSION] Code sent successfully! Type: {sent.type}, Next type: {sent.next_type}, Timeout: {sent.timeout}")
+    except (PhoneNumberInvalid, BadRequest) as e:
+        LOGGER.error(f"[SESSION] Phone number invalid: {e}")
         await client.disconnect()
         raise ValueError("That phone number was rejected by Telegram. Check the country code and try again.")
     except FloodWait as e:
+        LOGGER.warning(f"[SESSION] FloodWait: {e.value} seconds")
         await client.disconnect()
         raise ValueError(f"Too many attempts. Try again in {e.value} seconds.")
+    except Exception as e:
+        LOGGER.error(f"[SESSION] Unexpected error sending code: {type(e).__name__}: {e}")
+        await client.disconnect()
+        raise
 
     login_id = secrets.token_hex(12)
     _PENDING[login_id] = {"client": client, "phone": phone, "hash": sent.phone_code_hash, "ts": time.time()}
+    LOGGER.info(f"[SESSION] Login session created: {login_id}")
     return {"login_id": login_id}
 
 

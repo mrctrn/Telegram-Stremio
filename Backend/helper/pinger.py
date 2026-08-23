@@ -10,7 +10,11 @@ from Backend.logger import LOGGER
 #----- Periodically self-ping the stats endpoint to keep the instance awake
 async def ping():
     sleep_time = 1200
-    manifest_url = f"{SettingsManager.current().base_url}/api/system/stats"
+    base_url = SettingsManager.current().base_url
+    if not base_url:
+        LOGGER.info("No Base URL set — keep-alive pinger skipped.")
+        return
+    manifest_url = f"{base_url}/api/system/stats"
 
     while True:
         await asyncio.sleep(sleep_time)

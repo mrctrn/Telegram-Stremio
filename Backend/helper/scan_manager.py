@@ -254,7 +254,8 @@ class ScanManager:
             while self.state["pending"] and not self._cancel:
                 ch = self.state["pending"][0]
                 try:
-                    ch_id = int(ch)
+                    #----- stored ids are bare; Telegram needs the -100 channel form
+                    ch_id = int(f"-100{str(ch).replace('-100', '')}")
                 except ValueError:
                     LOGGER.warning(f"[ScanManager] invalid channel id: {ch}")
                     self.state["pending"].pop(0)
